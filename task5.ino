@@ -99,8 +99,8 @@ float k1 =2.0954,k2 =1.0935,k3 =-19.7222,k4 =-1.2465;
 #define MagB            25                     // electromagnet pin
 #define buzz_pin        22                     // Buzzer pin
 #define RED_pin         51                   //LED Pin
-#define Common_pin      45                     //LED Pin
-#define GREEN_pin       47                     //LED Pin
+#define Common_pin      47                     //LED Pin
+#define GREEN_pin       53                     //LED Pin
 #define BLUE_pin        49                     //LED Pin
 #define InL1            11                      // motor pin     IN1
 #define PWML            10                      // PWM motor pin ENA 
@@ -686,7 +686,7 @@ void lqrControl()
   //PREVIOUS STATE VARIABLES ENDS
   
 
-  //motorControl(lqr_torque);
+  motorControl(lqr_torque);
 }
 
 
@@ -732,14 +732,11 @@ void zigbeeControl()
       int analogX = analogLSB1+ analogMSB1*256;
       int analogY = analogLSB2+ analogMSB2*256;
       
-      //Serial.print(analogX);
-      //Serial.print("\t");
-      //Serial.println(analogY);
 
       int else_flag = 0;
 
       //Turn On the LED if the digitalMSB value is 0x01
-      if(digitalMSB == 0x01) //led switch
+      if(digitalMSB == 0x01 && digitalLSB == 0x10) //led switch
       {
         digitalWrite(RED_pin, LOW);
         digitalWrite(GREEN_pin, HIGH); 
@@ -750,8 +747,8 @@ void zigbeeControl()
         else_flag = 1;
       }
   
-      //Turn On the Magnet if the digitalLSB value is 0x04
-      if(digitalLSB == 0x04) //magnet switch
+      //Turn On the MagF if the digitalLSB value is 0x04
+      else if(digitalMSB == 0x00 && digitalLSB == 0x14) //magnet switch
       {
         digitalWrite(MagF, HIGH);
         digitalWrite(MagB, LOW);
@@ -761,8 +758,8 @@ void zigbeeControl()
         else_flag = 1;
       }
   
-      //Turn On the Buzzer if the digitalLSB value is 0x08
-      else if(digitalLSB == 0x08) //buzzer switch
+      //Turn On the MagB if the digitalLSB value is 0x08
+      else if(digitalMSB == 0x00 && digitalLSB == 0x18) //buzzer switch
       {
         digitalWrite(buzz_pin, HIGH);
         digitalWrite(MagF, LOW);
@@ -773,8 +770,8 @@ void zigbeeControl()
         else_flag = 1;
       }
   
-      //Turn On the Magnet and Buzzer if the digitalLSB value is 0x0C
-      else if(digitalLSB == 0x0C) //magnet and buzzer both
+      //Turn On the MagnetF and MagnetB if the digitalLSB value is 0x0C
+      else if(digitalMSB == 0x00 && digitalLSB == 0x1C) //magnetF and magnetB both
       {
         digitalWrite(MagF, HIGH);
         digitalWrite(MagB, HIGH);
@@ -785,7 +782,7 @@ void zigbeeControl()
         else_flag = 1;
       }
 
-      else if(something for green)
+      else if(digitalMSB == 0x00 && digitalLSB == 0x00)
       {        
         digitalWrite(RED_pin, HIGH);
         digitalWrite(GREEN_pin, LOW); 
@@ -901,20 +898,20 @@ int prev_time = millis();
 void loop()
 {
 
-//  if(timer1Flag==1)
-//  {
-//    readTiltAngle(); 
-//    lqrControl();
-//    zigbeeControl();
-//    timer1Flag=0;
-//  }
-  zigbeeControl();
+  if(timer1Flag==1)
+  {
+    readTiltAngle(); 
+    lqrControl();
+    zigbeeControl();
+    timer1Flag=0;
+  }
+ // zigbeeControl();
 //  if((millis()-prev_time)>100)
 //  {
 //    prev_time = millis();
 //    zigbeeControl();
 //  }
-  //delay(100);
+  //delay(1);
   n++;
   
 }
