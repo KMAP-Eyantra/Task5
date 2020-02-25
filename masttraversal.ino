@@ -204,10 +204,10 @@ void timer1_init()
 {
     // set up timer with prescaler = 8
     TCCR1B |= (1 << CS11);
-    //TCNT1 = 45536; //10ms
-   // TCNT1 = 51536; //7ms
+    TCNT1 = 45536; //10ms
+    //TCNT1 = 51536; //7ms
     //TCNT1 = 55536;  //5ms
-    TCNT1 = 57536; //4ms
+    //TCNT1 = 57536; //4ms
     // TCNT1H = 0xC9;
     // TCNT1L = 0x50;
     // enable overflow interrupt
@@ -220,10 +220,11 @@ void timer3_init()
 {
     // set up timer with prescaler = 8
     TCCR3B |= (1 << CS11);
-    //TCNT1 = 45536; //10ms
+    //TCNT3 = 45536; //10ms
+    TCNT3 = 0; 
     //TCNT3 = 51536; //7ms
     //TCNT1 = 55536;  //5ms
-    TCNT1 = 57536; //4ms
+    //TCNT3 = 57536; //4ms
     // TCNT1H = 0xC9;
     // TCNT1L = 0x50;
     // enable overflow interrupt
@@ -698,10 +699,10 @@ void motorControl(int torque)
  */ 
 ISR(TIMER1_OVF_vect)
 {
-  //TCNT1 = 45536;  //10ms
+  TCNT1 = 45536;  //10ms
   //TCNT1 = 51536; //7ms
   // TCNT1 = 55536;  //5ms
-  TCNT1 = 57536; //4ms
+  //TCNT1 = 57536; //4ms
   //TCNT1H = 0xC9;
   //TCNT1L = 0x50;
   
@@ -725,7 +726,8 @@ ISR(TIMER1_OVF_vect)
 
 ISR(TIMER3_OVF_vect)
 {
-  TCNT1 = 45536;  //10ms
+  //TCNT3 = 0;
+  //TCNT3 = 45536;  //10ms
   //TCNT3 = 51536; //7ms
   // TCNT1 = 55536;  //5ms
   //TCNT1 = 57536; //4ms
@@ -943,7 +945,7 @@ void zigbeeControl()
         return;
   
       //Both Wheels Forward
-      else if((analogX > 900)  && (400 < analogY) && (analogY <800 ))
+      else if((analogX > 900) && (analogY < 300) )
       {
         //Serial.println("Both Wheels Forward");
         moveMotor(FORWARD,  200, 10*2);
@@ -954,7 +956,7 @@ void zigbeeControl()
       }
   
       //Both Wheels Backward
-      else if((analogX > 900) && (analogY < 300) )
+      else if((analogX > 900)  && (400 < analogY) && (analogY <800 ))
       {
         //Serial.print("LSB ");
         //Serial.println(digitalLSB);
