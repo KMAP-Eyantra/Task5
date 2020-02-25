@@ -93,9 +93,31 @@ float radius = 0.065/2.0, oneRevTicks = 270.0;
 //float k1 =2.4035,k2 =-0.59025,k3 =-17.8336,k4 =-4.33;
 //float k1 =0.0,k2 =0.0,k3 =-37.8336,k4 =-12.33;
 //float k1 =2.381,k2 =2.0745,k3 =-38.0211,k4 =-4.4796;
-float k1 =0.96372,k2 =-5.3479,k3 =-35.3111,k4 =-9.2947;
+//float k1 =0.96372,k2 =-5.3479,k3 =-35.3111,k4 =-9.2947; ///////////////////////////////best 24feb
+//float k1 =0.96372,k2 =5.3479,k3 =-35.3111,k4 =-9.2947;  /////////////////////////////// good 
+//float k1 =0.85914,k2 =8.7934,k3 =-29.6023,k4 =-8.7265;    /////////////////////////////// new best 24 feb
+float k1 =0.96372,k2 =-5.3479,k3 =-25.3111,k4 =-9.2947;
+//float k1 =0.85914,k2 =8.7934,k3 =-29.6023,k4 =-8.7265; 
+//float k1 =1.8585,k2 =34.5068,k3 =-43.8069,k4 =-3.2314;
+//float k1 =0.7104,k2 =10.176,k3 =-110.2514,k4 =-9.0883;
+// float k1 =8.6172,k2 =40.8391,k3 =-44.7889,k4 =-2.7072;
+//float k1 =6.1487,k2 =26.2329,k3 =-33.5407,k4 =-2.5467;
+//float k1 =8.7519,k2 =51.1831,k3 =-33.2708,k4 =-10.2349;
 //float k1 =67.4371,k2 =20.8881,k3 =-11.0364,k4 =-0.94171;
 //float k1 =2.3095,k2 =-0.78255,k3 =-19.5161,k4 =-4.7839;
+//float k1 =6.5278,k2 =20.6549,k3 =-31.1805,k4 =-9.3641;
+
+//float k1 =6.8653,k2 =130.7632,k3 =-180.4729,k4 =-10.4331;
+//float k1 =1.9164,k2 =28.2472,k3 =-51.7621,k4 =-2.8032;
+//float k1 =1.9164,k2 =28.2472,k3 =-51.7621,k4 =-3.3073;
+//float k1 =1.8503,k2 =26.8197,k3 =-50.647,k4 =-3.3073;
+/////float k1 =2.2301,k2 =32.7003,k3 =-48.0071,k4 =-10.1632;
+//float k1 =6.3371,k2 =119.6951,k3 =-166.7903,k4 =-9.6849;
+//float k1 =6.3705,k2 =147.0247,k3 =-143.1095,k4 =-9.6288;
+//float k1 =8.292,k2 =195.3799,k3 =-180.995,k4 =-9.1314;
+//float k1 =2.2337,k2 =4.7221,k3 =-39.9402,k4 =-10.1468;
+//float k1 =1.0103,k2 =-1.9785,k3 =-24.0895,k4 =-10.1959;
+//float k1 =4.807,k2 =9.5952,k3 =-40.2564,k4 =-9.779;
 /*Team ID: 336
  * Team Members: Manish Dsilva, Amogh Zare, Pritam Mane, Kimaya Desai
  * 
@@ -154,7 +176,7 @@ volatile boolean run_l = false;                           // left motor moves(tr
  *
  */ 
 void setup() {
- Serial.begin(9600);
+ Serial.begin(115200);
  motor_init();
  MAG_init(); 
  LED_init();
@@ -185,8 +207,8 @@ void timer1_init()
     TCCR1B |= (1 << CS11);
     //TCNT1 = 45536; //10ms
    // TCNT1 = 51536; //7ms
-    TCNT1 = 55536;  //5ms
-    //TCNT1 = 57536; //4ms
+    //TCNT1 = 55536;  //5ms
+    TCNT1 = 57536; //4ms
     // TCNT1H = 0xC9;
     // TCNT1L = 0x50;
     // enable overflow interrupt
@@ -205,21 +227,6 @@ void timer1_init()
  * Example Call:  timer1_init()
  *
  */ 
-void timer3_init()
-{
-    // set up timer with prescaler = 8
-    TCCR3B |= (1 << CS11);
-    //TCNT1 = 45536; //10ms
-   // TCNT1 = 51536; //7ms
-    TCNT3 = 55536;  //5ms
-    //TCNT1 = 57536; //4ms
-    // TCNT1H = 0xC9;
-    // TCNT1L = 0x50;
-    // enable overflow interrupt
-    TIMSK3 |= (1 << TOIE3);
-    sei();
-   // tot_overflow = 0;
-}
 
 /*
  * Function Name: timer1_init()
@@ -231,21 +238,7 @@ void timer3_init()
  * Example Call:  timer1_init()
  *
  */ 
-void timer4_init()
-{
-    // set up timer with prescaler = 8
-    TCCR4B |= (1 << CS11);
-    //TCNT1 = 45536; //10ms
-   // TCNT1 = 51536; //7ms
-    TCNT4 = 55536;  //5ms
-    //TCNT1 = 57536; //4ms
-    // TCNT1H = 0xC9;
-    // TCNT1L = 0x50;
-    // enable overflow interrupt
-    TIMSK4 |= (1 << TOIE4);
-    sei();
-    tot_overflow = 0;
-}
+
 /*
  * Function Name: accel_init()
  * Input: NONE
@@ -619,8 +612,16 @@ void MagDrop(void)
  */ 
 void comp_filter_roll(float ax,float ay,float az,float gx,float gy,float gz)
 {
+  //float alpha = 0.004;
   float alpha = 0.004;
-  float dt = 0.02;
+  
+//  float rms_val = sqrt(ax*ax + ay*ay + az*az);
+//  float weight = 1 - 5*abs(1-rms_val);
+//  if(weight<0) weight = 0;
+//  weight /= 10;
+//  //Serial.println(weight);
+//  float alpha = weight;
+  float dt = 0.004;
 
   if (n==1)
   {
@@ -683,8 +684,8 @@ ISR(TIMER1_OVF_vect)
 {
   //TCNT1 = 45536;  //10ms
   //TCNT1 = 51536; //7ms
-   TCNT1 = 55536;  //5ms
-  //TCNT1 = 57536; //4ms
+  // TCNT1 = 55536;  //5ms
+  TCNT1 = 57536; //4ms
   //TCNT1H = 0xC9;
   //TCNT1L = 0x50;
   
@@ -703,18 +704,7 @@ ISR(TIMER1_OVF_vect)
  * Example Call: Default
  *
  */ 
-ISR(TIMER3_OVF_vect)
-{
-  //TCNT1 = 45536;  //10ms
-  //TCNT1 = 51536; //7ms
-   TCNT3 = 55536;  //5ms
-  //TCNT1 = 57536; //4ms
-  //TCNT1H = 0xC9;
-  //TCNT1L = 0x50;
-  
-  timer3Flag=1;
-  //tot_overflow++;
-}
+
 
 /*
  * Function Name: ; ISR  
@@ -727,18 +717,7 @@ ISR(TIMER3_OVF_vect)
  * Example Call: Default
  *
  */ 
-ISR(TIMER4_OVF_vect)
-{
-  //TCNT1 = 45536;  //10ms
-  //TCNT1 = 51536; //7ms
-   TCNT4 = 55536;  //5ms
-  //TCNT1 = 57536; //4ms
-  //TCNT1H = 0xC9;
-  //TCNT1L = 0x50;
-  
-  timer4Flag=1;
-  //tot_overflow++;
-}
+
 /*
  * Function Name: ; readTiltAngle  
  * Input:         NONE
@@ -769,7 +748,8 @@ void  readTiltAngle()
 void lqrControl()
 {
   //STATE VARIABLES
-  theta = (roll); 
+  theta = (roll)+1.1; 
+
   //Serial.println(theta);
   theta_dot = (theta-prev_theta);
   
@@ -780,14 +760,26 @@ void lqrControl()
       //x_dot = 0.1;
       countInit_r = count_r;
   }
-  //STATE VARIABLES ENDS
-  
+  //STATE VARIABLES END
+// if(theta > 0.5)
+// {
+//  lqr_torque = 255;
+// }
+// if(theta <-0.5)
+// {
+//  lqr_torque = -255;
+// }
+// else
+// {
   lqr_torque =  ((x*k1)+(x_dot*k2)+(theta*k3/57.0)+(theta_dot*k4/57.0))*(255.0/12.0);
-  lqr_torque = 14.400921*lqr_torque-14*x_dot; 
-  lqr_torque = constrain(lqr_torque, -200, 200); 
-  
-  //Serial.print(count_r);Serial.print("\t");Serial.print(x_dot*k2);Serial.print("\t");Serial.print(theta*k3/57.0);Serial.print("\t");Serial.println(-theta_dot*k4/57.0);
-  
+  lqr_torque = 14.400921*lqr_torque; 
+  //Serial.print(14.400921*lqr_torque);
+  //Serial.print("\t");
+  //Serial.println(-14000*x_dot);
+  lqr_torque = constrain(lqr_torque, -255, 255); 
+ //}
+  //Serial.print(x*k1*306.02);Serial.print("\t");Serial.print(x_dot*k2*306.02);Serial.print("\t");Serial.print(theta*k3/57.0*306.02);Serial.print("\t");Serial.println(theta_dot*k4/57.0*306.02);
+  //Serial.println(theta);
   //PREVIOUS STATE VARIABLES
   prev_theta = theta;
   prev_x = x;
@@ -795,7 +787,7 @@ void lqrControl()
   
 
   motorControl(lqr_torque);
-  //Serial.println(lqr_torque);
+  //Serial.println(x_dot);
   n++;
 }
 
@@ -842,7 +834,7 @@ void zigbeeControl()
       int analogX = analogLSB1+ analogMSB1*256;
       int analogY = analogLSB2+ analogMSB2*256;
 
-    
+      Serial.println(analogX);
       int else_flag = 0;
 
       //Turn On the LED if the digitalMSB value is 0x01
@@ -871,7 +863,7 @@ void zigbeeControl()
       //Turn On the MagB if the digitalLSB value is 0x08
       else if(digitalMSB == 0x00 && digitalLSB == 0x18) //buzzer switch
       {
-        digitalWrite(buzz_pin, HIGH);
+       // digitalWrite(buzz_pin, HIGH);
         digitalWrite(MagF, LOW);
         digitalWrite(MagB, HIGH);
         digitalWrite(RED_pin, HIGH);
@@ -911,7 +903,7 @@ void zigbeeControl()
         digitalWrite(BLUE_pin, HIGH);    
         digitalWrite(MagF, LOW);
         digitalWrite(MagB, LOW);
-        digitalWrite(buzz_pin, HIGH);
+       // digitalWrite(buzz_pin, HIGH);
       }
       
       //No Motion
@@ -1024,20 +1016,14 @@ int prev_time = millis();
 void loop()
 {
   //zigbeeControl();
-  if(timer1Flag%5==0)
+  if(timer1Flag==1)
   {
+    timer1Flag=0;
     readTiltAngle(); 
     lqrControl();
-   
-    //zigbeeControl();
-    timer1Flag=0;
+    
   }
     zigbeeControl();
-//  if((millis()-prev_time)>100)
-//  {
-//    prev_time = millis();
-//    zigbeeControl();
-//  }
-  //delay(1);
+
   
 }
