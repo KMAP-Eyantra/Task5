@@ -27,10 +27,14 @@ const int MPU = 0x68; // MPU6050 I2C address
 
 volatile int tot_overflow;
 volatile int timer1Flag = 0;
+volatile int timer3Flag = 0;
 
 float ax, ay, az;
 float gx, gy, gz;
 int n = 1;
+float yax, yay, yaz, ygx, ygy, ygz;
+float ygx_prev, ygy_prev , ygz_prev , yax_prev ,yay_prev ,yaz_prev;
+float gxPrevious,gyPrevious,gzPrevious;
 
 float roll,roll_prev,pitch,pitch_prev,yaw,omega;
 float prev_lqr_torque,lqr_torque,torque;
@@ -95,8 +99,16 @@ float radius = 0.065/2.0, oneRevTicks = 270.0;
 //float k1 =2.381,k2 =2.0745,k3 =-38.0211,k4 =-4.4796;
 //float k1 =0.96372,k2 =-5.3479,k3 =-35.3111,k4 =-9.2947; ///////////////////////////////best 24feb
 //float k1 =0.96372,k2 =5.3479,k3 =-35.3111,k4 =-9.2947;  /////////////////////////////// good 
-//float k1 =0.85914,k2 =8.7934,k3 =-29.6023,k4 =-8.7265;    /////////////////////////////// new best 24 feb
-float k1 =0.96372,k2 =-5.3479,k3 =-25.3111,k4 =-9.2947;
+//float k1 =-0.85914,k2 =8.7934,k3 =-29.6023,k4 =-8.7265;    /////////////////////////////// new best 24 feb
+
+float k1 =-0.65914,k2 =-28.7934,k3 =-29.6023,k4 =-8.7265;    /////////////////////////////// very new best 26 feb
+//float k1 =-0.85914,k2 =-8.7934,k3 =-29.6023,k4 =-8.7265; 
+//float k1 = -1,k2 =-8.7934,k3 =-29.6023,k4 =-8.7265;
+//float k1 =0.85914 - 2,k2 =8.7934 - 2,k3 =-29.6023-2,k4 =-8.7265 -2 ;
+
+
+//float k1 =0.0,k2 =0.0034,k3 =-5.6023,k4 =-8.9965;
+//float k1 =0.96372,k2 =-5.3479,k3 =-25.3111,k4 =-9.2947;
 //float k1 =0.85914,k2 =8.7934,k3 =-29.6023,k4 =-8.7265; 
 //float k1 =1.8585,k2 =34.5068,k3 =-43.8069,k4 =-3.2314;
 //float k1 =0.7104,k2 =10.176,k3 =-110.2514,k4 =-9.0883;
@@ -183,10 +195,8 @@ void setup() {
  BUZZ_init();
  accel_init();
  timer1_init();
+ timer3_init();
  Serial3.begin(9600);
- //pinMode(rxPin, INPUT);
- //pinMode(txPin, OUTPUT);
- //xbee.begin(19200);
  
 }
 
@@ -205,10 +215,10 @@ void timer1_init()
 {
     // set up timer with prescaler = 8
     TCCR1B |= (1 << CS11);
-    //TCNT1 = 45536; //10ms
-   // TCNT1 = 51536; //7ms
+    TCNT1 = 45536; //10ms
+    //TCNT1 = 51536; //7ms
     //TCNT1 = 55536;  //5ms
-    TCNT1 = 57536; //4ms
+    //TCNT1 = 57536; //4ms
     // TCNT1H = 0xC9;
     // TCNT1L = 0x50;
     // enable overflow interrupt
@@ -216,6 +226,24 @@ void timer1_init()
     sei();
   //  tot_overflow = 0;
 }
+
+void timer3_init()
+{
+    // set up timer with prescaler = 8
+    TCCR3B |= (1 << CS11);
+    //TCNT3 = 45536; //10ms
+    TCNT3 = 0; 
+    //TCNT3 = 51536; //7ms
+    //TCNT1 = 55536;  //5ms
+    //TCNT3 = 57536; //4ms
+    // TCNT1H = 0xC9;
+    // TCNT1L = 0x50;
+    // enable overflow interrupt
+    TIMSK3 |= (1 << TOIE3);
+    sei();
+  //  tot_overflow = 0;
+}
+
 
 /*
  * Function Name: timer1_init()
@@ -598,6 +626,35 @@ void MagDrop(void)
     digitalWrite(MagB, LOW);
 }
 
+void highpassfilter(float gx,float gy,float gz,int16_t n,int16_t f_cut)
+{
+  
+  float dT = 0.01;  //time in seconds
+  float Tau= 1/(2*3.1457*f_cut);                   //f_cut = 5
+  float alpha = Tau/(Tau+dT);                //do not change this line
+ 
+  if(n == 1)
+  {
+    ygx = (1-alpha)*gx ;
+    ygy = (1-alpha)*gy ;
+    ygz = (1-alpha)*gz ;
+
+  }
+  else
+  {
+    ygx = (1-alpha)*ygx_prev + (1-alpha)*(gx - gxPrevious);
+    ygy = (1-alpha)*ygy_prev + (1-alpha)*(gy - gyPrevious);
+    ygz = (1-alpha)*ygz_prev + (1-alpha)*(gz - gzPrevious);
+  }
+  gxPrevious = gx;
+  gyPrevious = gy;
+  gzPrevious = gz;
+
+  ygx_prev = ygx;
+  ygy_prev = ygy;
+  ygz_prev = ygz;
+  
+}
 
 /*
  * Function Name: ; comp_filter_roll     
@@ -612,7 +669,7 @@ void MagDrop(void)
  */ 
 void comp_filter_roll(float ax,float ay,float az,float gx,float gy,float gz)
 {
-  //float alpha = 0.004;
+  
   float alpha = 0.004;
   
 //  float rms_val = sqrt(ax*ax + ay*ay + az*az);
@@ -682,10 +739,10 @@ void motorControl(int torque)
  */ 
 ISR(TIMER1_OVF_vect)
 {
-  //TCNT1 = 45536;  //10ms
+  TCNT1 = 45536;  //10ms
   //TCNT1 = 51536; //7ms
   // TCNT1 = 55536;  //5ms
-  TCNT1 = 57536; //4ms
+  //TCNT1 = 57536; //4ms
   //TCNT1H = 0xC9;
   //TCNT1L = 0x50;
   
@@ -701,9 +758,25 @@ ISR(TIMER1_OVF_vect)
  * based on the the times overflow after designated time
   *//*
  * 
+ * 
+ * 
  * Example Call: Default
  *
  */ 
+
+ISR(TIMER3_OVF_vect)
+{
+  //TCNT3 = 0;
+  //TCNT3 = 45536;  //10ms
+  //TCNT3 = 51536; //7ms
+  // TCNT1 = 55536;  //5ms
+  //TCNT1 = 57536; //4ms
+  //TCNT1H = 0xC9;
+  //TCNT1L = 0x50;
+  
+  timer3Flag=1;
+  //tot_overflow++;
+}
 
 
 /*
@@ -728,10 +801,35 @@ ISR(TIMER1_OVF_vect)
  *
  */ 
 
+void lowpassfilter(float ax,float ay,float az,int16_t n,int16_t f_cut)
+{
+  float dT = 0.01;  //time in seconds
+  float Tau= 1/(2*3.1457*f_cut);                   //f_cut = 5
+  float alpha = Tau/(Tau+dT);                //do not change this line
+
+  if(n == 1)
+  {
+    yax = (1-alpha)*ax ;
+    yay = (1-alpha)*ay ;
+    yaz = (1-alpha)*az ;
+  }
+  else
+  {
+    yax = (1-alpha)*ax + alpha*yax_prev;
+    yay = (1-alpha)*ay + alpha*yay_prev;
+    yaz = (1-alpha)*az + alpha*yaz_prev;  
+  }  
+  yax_prev = yax;
+  yay_prev = yay;
+  yaz_prev = yaz;
+    
+}
 void  readTiltAngle()
 { 
   //MPU
   accelGyro();
+  //lowpassfilter(ax,ay,az,n,1);
+  //highpassfilter(gx,gy,gz,n,1);
   comp_filter_roll(ax,ay,az,gx,gy,gz);
   //MPU ENDS
 }
@@ -776,7 +874,7 @@ void lqrControl()
   //Serial.print(14.400921*lqr_torque);
   //Serial.print("\t");
   //Serial.println(-14000*x_dot);
-  lqr_torque = constrain(lqr_torque, -255, 255); 
+  lqr_torque = constrain(lqr_torque, -150, 150); 
  //}
   //Serial.print(x*k1*306.02);Serial.print("\t");Serial.print(x_dot*k2*306.02);Serial.print("\t");Serial.print(theta*k3/57.0*306.02);Serial.print("\t");Serial.println(theta_dot*k4/57.0*306.02);
   //Serial.println(theta);
@@ -912,26 +1010,26 @@ void zigbeeControl()
         return;
   
       //Both Wheels Forward
-      else if((analogX > 900)  && (400 < analogY) && (analogY <800 ))
+      else if((analogX > 900) && (analogY < 300) )
       {
         //Serial.println("Both Wheels Forward");
-        moveMotor(FORWARD,  200, 10*2);
+        moveMotor(FORWARD,  200, 3*2);
         //motorForward_L(100);
         //motorForward_R(100);
-        x=0;
+        x=0.03;
         return;
       }
   
       //Both Wheels Backward
-      else if((analogX > 900) && (analogY < 300) )
+      else if((analogX > 900)  && (400 < analogY) && (analogY <800 ))
       {
         //Serial.print("LSB ");
         //Serial.println(digitalLSB);
         //Serial.println(digitalMSB);
-        moveMotor(BACKWARD,  200, 10*2);
+        moveMotor(BACKWARD,  200, 3*2);
         //motorBackward_L(100);
         //motorBackward_R(100);
-        x=0;
+        x=-0.03;
         return;
       }
   
@@ -939,7 +1037,7 @@ void zigbeeControl()
       else if((analogX < 300) && (analogY > 900))
       {
         //Serial.println("left wheel Backward, right wheel Forward");
-        moveMotor(RIGHTWARD,  200, 10*2);
+        moveMotor(RIGHTWARD,  200, 3*2);
         //motorForward_R(100);
         //motorForward_L(100);
         x=0;
@@ -951,7 +1049,7 @@ void zigbeeControl()
       else if((400< analogX)&&(analogX <800 )&& (analogY > 900) )
       {
         //Serial.println("left wheel Forward, right wheel Backward");
-        moveMotor(LEFTWARD,  200, 10*2);
+        moveMotor(LEFTWARD,  200, 3*2);
         //motorForward_L(100);
         //motorForward_R(100);
         x=0;
@@ -1012,7 +1110,7 @@ void accelGyro()
  * Example Call:  default(NONE)
  *
  */ 
-int prev_time = millis();
+//int prev_time = millis();
 void loop()
 {
   //zigbeeControl();
@@ -1020,10 +1118,28 @@ void loop()
   {
     timer1Flag=0;
     readTiltAngle(); 
+    //lqrControl();
+    
+  }
+
+  if(timer3Flag==1)
+  {
+    timer3Flag=0;
+    //readTiltAngle(); 
     lqrControl();
     
   }
+  
+  /*
+  if(millis() - prev_time > 6)
+  {
+    prev_time = millis();
+    //timer1Flag=0;
+    readTiltAngle(); 
+    lqrControl();
+  } */
+   
     zigbeeControl();
-
+    //delay(1);
   
 }
